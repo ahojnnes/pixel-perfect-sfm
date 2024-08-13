@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 import subprocess
 
-from .config import DATASET_PATH
+from config import DATASET_PATH
 
 
 def run(dataset_path: Path):
@@ -14,12 +14,12 @@ def run(dataset_path: Path):
     subprocess.call(
         ["wget", "https://www.eth3d.net/data/"+undistorted_images],
         cwd=dataset_path)
-    subprocess.call(["7z", "x", undistorted_images], cwd=dataset_path)
+    subprocess.call(["7zz", "x", undistorted_images], cwd=dataset_path)
     subprocess.call(["rm", undistorted_images], cwd=dataset_path)
 
     subprocess.call(
         ["wget", "https://www.eth3d.net/data/"+scan], cwd=dataset_path)
-    subprocess.call(["7z", "x", scan], cwd=dataset_path)
+    subprocess.call(["7zz", "x", scan], cwd=dataset_path)
     subprocess.call(["rm", scan], cwd=dataset_path)
 
 

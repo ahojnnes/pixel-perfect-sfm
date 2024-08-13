@@ -8,12 +8,9 @@ from pathlib import Path
 from typing import List, Dict
 import pycolmap
 
-from ... import logger, set_debug
-from ...refine_hloc import PixSfM
-from ...configs import parse_config_path, default_configs
-from .utils import Paths, extract_and_match, create_list_files
-from .config import SCENES, FEATURES, DEFAULT_FEATURES, OUTDOOR, INDOOR
-from .config import DATASET_PATH, OUTPUTS_PATH
+from utils import Paths, extract_and_match, create_list_files
+from config import SCENES, FEATURES, DEFAULT_FEATURES, OUTDOOR, INDOOR
+from config import DATASET_PATH, OUTPUTS_PATH
 
 
 def eval_multiview(tool_path: Path, ply_path: Path, scan_path: Path,
@@ -24,7 +21,7 @@ def eval_multiview(tool_path: Path, ply_path: Path, scan_path: Path,
             "Please install it from "
             "https://github.com/ETH3D/multi-view-evaluation")
 
-    logger.info("Evaluating %s against %s.", ply_path, scan_path)
+    print("Evaluating", ply_path, "against", scan_path)
     cmd = [
         str(tool_path),
         '--reconstruction_ply_path', ply_path,
@@ -53,22 +50,21 @@ def eval_multiview(tool_path: Path, ply_path: Path, scan_path: Path,
 
 
 # @TODO: allow cache_path to be different to output_dir (important for cluster)
-def run_scene(method: str, paths: Paths, sfm: PixSfM,
+def run_scene(method: str, paths: Paths,
               tolerances: List[float]) -> Dict:
 
     output_dir = paths.triangulation
     output_dir.mkdir(exist_ok=True, parents=True)
-    OmegaConf.save(sfm.conf, output_dir / "config.yaml")
+    # OmegaConf.save(sfm.conf, output_dir / "config.yaml")
 
-    extract_and_match(method, paths)
+    # extract_and_match(method, paths)
 
-    pycolmap.Reconstruction(str(paths.reference_sfm)).write(
-                                                    str(paths.reference_sfm))
+    rec = pycolmap.Reconstruction(str(paths.reference_sfm))
 
-    rec, _ = sfm.triangulation(
-        output_dir, paths.reference_sfm, paths.image_dir, paths.pairs,
-        paths.features, paths.matches,
-        cache_path=output_dir)
+    # rec, _ = sfm.triangulation(
+    #     output_dir, paths.reference_sfm, paths.image_dir, paths.pairs,
+    #     paths.features, paths.matches,
+    #     cache_path=output_dir)
 
     ply_path = output_dir / 'reconstruction.ply'
     rec.export_PLY(str(ply_path))
@@ -123,14 +119,14 @@ def format_results(results: Dict[str, Dict[str, List]],
     return '\n'.join(text)
 
 
-def main(tag: str, scenes: List[str], methods: List[str], cfg: DictConfig,
+def main(tag: str, scenes: List[str], methods: List[str], 
          dataset: Path, outputs: Path, tolerances: List[float],
          overwrite: bool = False):
 
     if not dataset.exists():
         raise FileNotFoundError(f'Cannot find the ETH3D dataset at {dataset}.')
 
-    sfm = PixSfM(cfg)
+    # sfm = PixSfM(cfg)
     all_results = defaultdict(dict)
     for scene in scenes:
         (outputs / scene).mkdir(exist_ok=True, parents=True)
@@ -139,14 +135,14 @@ def main(tag: str, scenes: List[str], methods: List[str], cfg: DictConfig,
         create_list_files(paths_scene)
 
         for method in methods:
-            logger.info('Running scene/method %s/%s.', scene, method)
+            print('Running scene/method', scene, method)
             paths = paths_scene.interpolate(method=method)
             if paths.triangulation_results.exists() and not overwrite:
                 with paths.triangulation_results.open() as fp:
                     results = json.load(fp)
                 assert len(set(tolerances) - set(results['tolerances'])) == 0
             else:
-                results = run_scene(method, paths, sfm, tolerances)
+                results = run_scene(method, paths, tolerances)
                 with paths.triangulation_results.open('w') as fp:
                     json.dump(results, fp)
 
@@ -160,11 +156,11 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--tag', default="pixsfm", help="Run name.")
-    parser.add_argument(
-        '--config', type=parse_config_path,
-        default="pixsfm_eth3d",
-        help="Path to the YAML configuration file or the name "
-             f"a default config among {list(default_configs)}.")
+    # parser.add_argument(
+    #     '--config', type=parse_config_path,
+    #     default="pixsfm_eth3d",
+    #     help="Path to the YAML configuration file or the name "
+    #          f"a default config among {list(default_configs)}.")
     parser.add_argument(
         '--scenes', default=SCENES, choices=SCENES, nargs='+',
         help="Scenes from ETH3D.")
@@ -188,7 +184,7 @@ if __name__ == '__main__':
     if args.verbose:
         set_debug()
 
-    cfg = OmegaConf.merge(OmegaConf.load(args.config),
-                          OmegaConf.from_cli(args.dotlist))
-    main(args.tag, args.scenes, args.methods, cfg, args.dataset_path,
+    # cfg = OmegaConf.merge(OmegaConf.load(args.config),
+    #                       OmegaConf.from_cli(args.dotlist))
+    main(args.tag, args.scenes, args.methods, args.dataset_path,
          args.output_path, args.tolerances, args.overwrite)

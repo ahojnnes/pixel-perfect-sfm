@@ -15,6 +15,7 @@ class Paths:
     scene: Path = '{dataset}/{scene}/'
     image_dir: Path = '{dataset}/{scene}/images/'
     reference_sfm: Path = '{dataset}/{scene}/dslr_calibration_undistorted/'
+    sfm: Path = '{dataset}/{scene}/dslr_calibration_undistorted/{method}/'
 
     images: Path = '{outputs}/{scene}/image-list.txt'
     pairs: Path = '{outputs}/{scene}/match-list.txt'

@@ -137,7 +137,7 @@ match_configs = {
 }
 
 FEATURES = list(feature_configs.keys())
-DEFAULT_FEATURES = ["sift", "superpoint", "r2d2"]
+DEFAULT_FEATURES = ["reference"]
 
 LOCALIZATION_IMAGES = {
    "pipes": [

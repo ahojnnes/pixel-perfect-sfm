@@ -59,7 +59,10 @@ def run_scene(method: str, paths: Paths,
 
     # extract_and_match(method, paths)
 
-    rec = pycolmap.Reconstruction(str(paths.reference_sfm))
+    if method == "reference":
+        rec = pycolmap.Reconstruction(str(paths.reference_sfm))
+    else:
+        rec = pycolmap.Reconstruction(str(paths.sfm))
 
     # rec, _ = sfm.triangulation(
     #     output_dir, paths.reference_sfm, paths.image_dir, paths.pairs,
@@ -165,7 +168,7 @@ if __name__ == '__main__':
         '--scenes', default=SCENES, choices=SCENES, nargs='+',
         help="Scenes from ETH3D.")
     parser.add_argument(
-        '--methods', default=DEFAULT_FEATURES, choices=FEATURES, nargs='+',
+        '--methods', default=DEFAULT_FEATURES, nargs='+',
         help="Local feature detectors and descriptors.")
     parser.add_argument(
         '--dataset_path', type=Path, default=DATASET_PATH,
